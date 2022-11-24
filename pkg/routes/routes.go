@@ -12,4 +12,5 @@ func SetupRoutes(r *gin.Engine) {
 	api.GET("/", handler.GetAllBitlys)
 	api.GET("/:id", handler.GetBitlyById)
 	api.POST("/", handler.CreateBitly)
+	api.PUT("/:id", handler.UpdateBitly)
 }
