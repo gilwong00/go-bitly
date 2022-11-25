@@ -110,3 +110,33 @@ func UpdateBitly(c *gin.Context) {
 		"bitly": bitly,
 	})
 }
+
+func DeleteBitly(c *gin.Context) {
+	id := c.Param("id")
+
+	result := db.DB.Delete(&models.Bitly{}, id)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": result.Error})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func Redirect(c *gin.Context) {
+	url := c.Param("url")
+	var bitly models.Bitly
+	result := db.DB.Where("bitly = ?", url).First(&bitly)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("Could not find bitly with %v", url),
+		})
+		return
+	}
+
+	db.DB.Model(&bitly).Update("clicked", bitly.Clicked+1)
+	c.Redirect(http.StatusMovedPermanently, bitly.Redirect)
+	c.Abort()
+}
