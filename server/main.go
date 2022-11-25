@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -28,24 +29,10 @@ func init() {
 	defer db.DB.AutoMigrate(&models.Bitly{})
 }
 
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Header("Access-Control-Allow-Methods", "POST,HEAD,PATCH,OPTIONS,GET,PUT")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	}
-}
-
 func main() {
 	gin.ForceConsoleColor()
 	r := gin.Default()
+
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
@@ -59,7 +46,14 @@ func main() {
 			param.ErrorMessage,
 		)
 	}))
-	r.Use(CORSMiddleware())
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"}, // can update this to be more inclusive
+		AllowMethods: []string{"POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders: []string{"Content-Type,access-control-allow-origin, access-control-allow-headers"},
+		// AllowCredentials: true,
+		// MaxAge:           12 * time.Hour,
+	}))
 
 	routes.SetupRoutes(r)
 
